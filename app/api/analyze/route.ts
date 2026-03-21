@@ -1,12 +1,15 @@
 import { NextResponse } from 'next/server';
 
 import { analyzePost } from '../../../lib/analyzePost';
-import { AnalyzePostRequest, AnalyzePostResponse } from '../../../lib/types';
+import { AnalyzePostRequest, AnalyzePostResponse, AnalysisMode } from '../../../lib/types';
+
+const allowedModes: AnalysisMode[] = ['normal', 'strict', 'brutal'];
 
 export async function POST(request: Request) {
   try {
     const body = (await request.json()) as Partial<AnalyzePostRequest>;
     const text = typeof body.text === 'string' ? body.text.trim() : '';
+    const mode = allowedModes.includes(body.mode as AnalysisMode) ? (body.mode as AnalysisMode) : 'normal';
 
     if (!text) {
       return NextResponse.json({ error: 'Please provide post text to analyze.' }, { status: 400 });
@@ -17,7 +20,7 @@ export async function POST(request: Request) {
     }
 
     const response: AnalyzePostResponse = {
-      result: analyzePost(text),
+      result: analyzePost(text, mode),
     };
 
     return NextResponse.json(response);
