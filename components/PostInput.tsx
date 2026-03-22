@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { FormEvent, useRef, useState } from 'react';
 
 import { LoaderIcon, SparklesIcon } from './icons';
@@ -85,31 +86,47 @@ export function PostInput() {
           />
         </label>
 
+        <div className="mt-4 rounded-2xl border border-slate-100 bg-slate-50 px-4 py-3 text-sm text-slate-600">
+          Use HypeOmeter before posting to reduce hype and improve signal.
+        </div>
+
         <div className="mt-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <p className="text-sm text-muted">Best for short posts, launch announcements, thought-leadership threads, and AI hot takes.</p>
-          <button
-            type="submit"
-            disabled={isLoading || !text.trim()}
-            className="inline-flex min-w-[150px] items-center justify-center gap-2 rounded-full bg-slate-950 px-5 py-3 text-sm font-semibold text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:bg-slate-300"
-          >
-            {isLoading ? (
-              <>
-                <LoaderIcon className="h-4 w-4" />
-                Analyzing...
-              </>
-            ) : (
-              <>
-                <SparklesIcon className="h-4 w-4" />
-                Analyze
-              </>
-            )}
-          </button>
+          <div className="space-y-2">
+            <p className="text-sm text-muted">Best for short posts, launch announcements, thought-leadership threads, and AI hot takes.</p>
+            <Link href="/about" className="inline-flex text-sm font-medium text-primary transition hover:text-primary/80">Why this exists</Link>
+          </div>
+          <div className="flex flex-col gap-3 sm:flex-row">
+            <button
+              type="submit"
+              disabled={isLoading || !text.trim()}
+              className="inline-flex min-w-[150px] items-center justify-center gap-2 rounded-full border border-slate-200 px-5 py-3 text-sm font-semibold text-slate-700 transition hover:border-primary hover:text-primary disabled:cursor-not-allowed disabled:border-slate-200 disabled:text-slate-400"
+            >
+              Check before publishing
+            </button>
+            <button
+              type="submit"
+              disabled={isLoading || !text.trim()}
+              className="inline-flex min-w-[150px] items-center justify-center gap-2 rounded-full bg-slate-950 px-5 py-3 text-sm font-semibold text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:bg-slate-300"
+            >
+              {isLoading ? (
+                <>
+                  <LoaderIcon className="h-4 w-4" />
+                  Analyzing...
+                </>
+              ) : (
+                <>
+                  <SparklesIcon className="h-4 w-4" />
+                  Analyze
+                </>
+              )}
+            </button>
+          </div>
         </div>
 
         {error ? <p className="mt-4 rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">{error}</p> : null}
       </form>
 
-      <div ref={resultRef}>{result ? <ResultPanel result={result} /> : null}</div>
+      <div ref={resultRef}>{result ? <ResultPanel result={result} originalText={text.trim()} /> : null}</div>
     </div>
   );
 }

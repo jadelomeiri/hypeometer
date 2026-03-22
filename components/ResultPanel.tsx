@@ -1,39 +1,17 @@
-import { AlertIcon, BrainIcon, FlaskIcon, RadarIcon, WrenchIcon } from './icons';
+import { AlertIcon, FlaskIcon, RadarIcon, WrenchIcon } from './icons';
 import { AnalyzePostResult } from '../lib/types';
-import { cn } from '../lib/utils';
-import { ScoreCard } from './ScoreCard';
+import { ResultSummaryCard } from './ResultSummaryCard';
+import { ShareActions } from './ShareActions';
 
 interface ResultPanelProps {
   result: AnalyzePostResult;
+  originalText: string;
 }
 
-const likelihoodStyles = {
-  low: 'bg-emerald-50 text-emerald-700 border-emerald-200',
-  medium: 'bg-amber-50 text-amber-700 border-amber-200',
-  high: 'bg-rose-50 text-rose-700 border-rose-200',
-};
-
-export function ResultPanel({ result }: ResultPanelProps) {
+export function ResultPanel({ result, originalText }: ResultPanelProps) {
   return (
-    <section className="space-y-6 rounded-3xl border border-border bg-card p-6 shadow-panel sm:p-8">
-      <div className="flex flex-col gap-4 border-b border-slate-100 pb-6 sm:flex-row sm:items-end sm:justify-between">
-        <div>
-          <p className="text-sm font-semibold uppercase tracking-[0.2em] text-primary">Analysis</p>
-          <h2 className="mt-2 text-2xl font-semibold tracking-tight text-foreground">{result.verdict}</h2>
-        </div>
-        <div className={cn('inline-flex items-center gap-2 rounded-full border px-4 py-2 text-sm font-medium', likelihoodStyles[result.aiStyleLikelihood])}>
-          <BrainIcon className="h-4 w-4" />
-          AI-style phrasing likelihood: {result.aiStyleLikelihood}
-        </div>
-      </div>
-
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
-        <ScoreCard label="Hype" score={result.hype} tone="warning" />
-        <ScoreCard label="Substance" score={result.substance} tone="primary" />
-        <ScoreCard label="Evidence" score={result.evidence} tone="success" />
-        <ScoreCard label="Specificity" score={result.specificity} tone="primary" />
-        <ScoreCard label="Operator signals" score={result.operatorSignals} tone="success" />
-      </div>
+    <section className="space-y-6">
+      <ResultSummaryCard result={result} />
 
       <div className="grid gap-6 lg:grid-cols-[1.1fr_0.9fr]">
         <div className="rounded-2xl border border-border bg-slate-50 p-5">
@@ -69,9 +47,12 @@ export function ResultPanel({ result }: ResultPanelProps) {
               <h3 className="text-lg font-semibold">Rewrite as a serious post</h3>
             </div>
             <p className="mt-3 whitespace-pre-line text-sm leading-6 text-slate-700">{result.strongerRewrite}</p>
+            <p className="mt-4 text-sm text-slate-500">Want this to land better? Use the stronger rewrite as a draft and add setup, metrics, and caveats before posting.</p>
           </div>
         </div>
       </div>
+
+      <ShareActions result={result} originalText={originalText} />
 
       <div className="rounded-2xl border border-dashed border-slate-200 bg-white p-4 text-sm text-slate-600">
         <div className="flex items-start gap-2">

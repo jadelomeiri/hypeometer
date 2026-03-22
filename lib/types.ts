@@ -24,3 +24,23 @@ export interface SignalMatch {
   phrase: string;
   count: number;
 }
+
+export interface PublicShareResultV1 {
+  version: 1;
+  createdAt: string;
+  originalText: string;
+  originalTextWasTrimmed: boolean;
+  result: AnalyzePostResult;
+}
+
+export interface CreateShareResultRequest {
+  originalText: string;
+  result: AnalyzePostResult;
+}
+
+export interface CreateShareResultResponse {
+  id: string;
+  url: string;
+  shareText: string;
+  payload: PublicShareResultV1;
+}
