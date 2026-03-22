@@ -12,6 +12,7 @@ const SAMPLE_POST = `AI is about to replace entire teams. We plugged in a new mo
 export function PostInput() {
   const [text, setText] = useState('');
   const [result, setResult] = useState<AnalyzePostResponse['result'] | null>(null);
+  const [submittedText, setSubmittedText] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const resultRef = useRef<HTMLDivElement | null>(null);
@@ -23,6 +24,8 @@ export function PostInput() {
       return;
     }
 
+    const trimmedText = text.trim();
+
     setIsLoading(true);
     setError(null);
 
@@ -32,7 +35,7 @@ export function PostInput() {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ text }),
+        body: JSON.stringify({ text: trimmedText }),
       });
 
       const payload = (await response.json()) as Partial<AnalyzePostResponse> & { error?: string };
@@ -42,6 +45,7 @@ export function PostInput() {
       }
 
       setResult(payload.result);
+      setSubmittedText(trimmedText);
       requestAnimationFrame(() => {
         resultRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
       });
@@ -126,7 +130,7 @@ export function PostInput() {
         {error ? <p className="mt-4 rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">{error}</p> : null}
       </form>
 
-      <div ref={resultRef}>{result ? <ResultPanel result={result} originalText={text.trim()} /> : null}</div>
+      <div ref={resultRef}>{result ? <ResultPanel result={result} originalText={submittedText} /> : null}</div>
     </div>
   );
 }

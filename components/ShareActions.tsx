@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 
 import { AnalyzePostResult, CreateShareResultResponse } from '../lib/types';
 import { Toast } from './Toast';
@@ -19,6 +19,12 @@ export function ShareActions({ result, originalText }: ShareActionsProps) {
     if (!shareData) return '#';
     return `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareData.shareText)}`;
   }, [shareData]);
+
+  useEffect(() => {
+    setShareData(null);
+    setFeedback(null);
+    setIsGenerating(false);
+  }, [originalText, result]);
 
   async function ensureShareData() {
     if (shareData) return shareData;
