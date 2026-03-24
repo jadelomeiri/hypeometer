@@ -1,7 +1,7 @@
 import { ImageResponse } from 'next/og';
 
 import { APP_CONFIG } from '../../../lib/config';
-import { decodePublicSharePayload } from '../../../lib/publicResult';
+import { getSharedResultStore, sanitizeShareId } from '../../../lib/share/store';
 
 export const runtime = 'nodejs';
 export const size = {
@@ -12,7 +12,8 @@ export const contentType = 'image/png';
 
 export default async function OpenGraphImage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const payload = decodePublicSharePayload(id);
+  const sanitizedId = sanitizeShareId(id);
+  const payload = sanitizedId ? await getSharedResultStore().getById(sanitizedId) : null;
 
   if (!payload) {
     return new ImageResponse(

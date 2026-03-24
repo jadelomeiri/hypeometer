@@ -6,24 +6,33 @@ import { ExpandableText } from '../../../components/ExpandableText';
 import { ResultSummaryCard } from '../../../components/ResultSummaryCard';
 import { SiteFooter } from '../../../components/SiteFooter';
 import { APP_CONFIG } from '../../../lib/config';
-import { buildPublicShareUrl, decodePublicSharePayload } from '../../../lib/publicResult';
+import { buildPublicShareUrl } from '../../../lib/publicResult';
+import { getSharedResultStore, sanitizeShareId } from '../../../lib/share/store';
 
 interface PublicResultPageProps {
   params: Promise<{ id: string }>;
 }
 
+async function loadShareRecord(id: string) {
+  const sanitized = sanitizeShareId(id);
+  if (!sanitized) return null;
+
+  const store = getSharedResultStore();
+  return store.getById(sanitized);
+}
+
 export async function generateMetadata({ params }: PublicResultPageProps): Promise<Metadata> {
   const { id } = await params;
-  const payload = decodePublicSharePayload(id);
+  const record = await loadShareRecord(id);
 
-  if (!payload) {
+  if (!record) {
     return {
       title: `Result not found | ${APP_CONFIG.name}`,
     };
   }
 
-  const title = `${payload.result.verdict} | ${APP_CONFIG.name}`;
-  const description = `Hype ${payload.result.hype}, Substance ${payload.result.substance}, Evidence ${payload.result.evidence}. Public analysis by ${APP_CONFIG.name}.`;
+  const title = `${record.result.verdict} | ${APP_CONFIG.name}`;
+  const description = `Hype ${record.result.hype}, Substance ${record.result.substance}, Evidence ${record.result.evidence}. Public analysis by ${APP_CONFIG.name}.`;
 
   return {
     title,
@@ -31,25 +40,28 @@ export async function generateMetadata({ params }: PublicResultPageProps): Promi
     openGraph: {
       title,
       description,
-      url: buildPublicShareUrl(id),
-      images: [`/r/${id}/opengraph-image`],
+      url: buildPublicShareUrl(record.id),
+      images: [`/r/${record.id}/opengraph-image`],
     },
     twitter: {
       card: 'summary_large_image',
       title,
       description,
-      images: [`/r/${id}/opengraph-image`],
+      images: [`/r/${record.id}/opengraph-image`],
     },
   };
 }
 
 export default async function PublicResultPage({ params }: PublicResultPageProps) {
   const { id } = await params;
-  const payload = decodePublicSharePayload(id);
+  const record = await loadShareRecord(id);
 
-  if (!payload) {
+  if (!record) {
     notFound();
   }
+
+  const store = getSharedResultStore();
+  await store.incrementViews(record.id);
 
   return (
     <main className="min-h-screen px-4 py-10 sm:px-6 lg:px-8">
@@ -72,14 +84,14 @@ export default async function PublicResultPage({ params }: PublicResultPageProps
           </div>
         </section>
 
-        <ResultSummaryCard result={payload.result} explanationLimit={3} />
+        <ResultSummaryCard result={record.result} explanationLimit={3} />
 
         <section className="grid gap-6 lg:grid-cols-[1.1fr_0.9fr]">
           <div className="space-y-6">
-            <ExpandableText text={payload.originalText} />
+            <ExpandableText text={record.originalText} />
             <div className="rounded-3xl border border-border bg-card p-6 shadow-panel sm:p-8">
               <h2 className="text-xl font-semibold tracking-tight text-slate-950">Rewrite as a stronger post</h2>
-              <p className="mt-4 whitespace-pre-line text-sm leading-7 text-slate-700">{payload.result.strongerRewrite}</p>
+              <p className="mt-4 whitespace-pre-line text-sm leading-7 text-slate-700">{record.result.strongerRewrite}</p>
               <p className="mt-4 text-sm text-slate-500">Want this to land better? Use the stronger rewrite as a starting point and add specific evidence, setup details, and tradeoffs.</p>
             </div>
           </div>
