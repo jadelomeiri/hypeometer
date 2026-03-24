@@ -71,7 +71,7 @@ export function ShareActions({ result, originalText }: ShareActionsProps) {
           <p className="text-sm font-semibold uppercase tracking-[0.2em] text-primary">Share results</p>
           <h3 className="mt-2 text-2xl font-semibold tracking-tight">Make the analysis easy to pass around.</h3>
           <p className="mt-2 max-w-2xl text-sm leading-6 text-muted">
-            Generate a public result link, copy a tasteful caption for LinkedIn, or open an X share draft.
+            Generate a public result link, copy a tasteful caption for LinkedIn, or open a prefilled share draft.
           </p>
         </div>
       </div>
@@ -102,6 +102,19 @@ export function ShareActions({ result, originalText }: ShareActionsProps) {
           className="inline-flex items-center justify-center rounded-full border border-slate-200 px-5 py-3 text-sm font-semibold text-slate-700 transition hover:border-primary hover:text-primary disabled:cursor-not-allowed disabled:border-slate-200 disabled:text-slate-400"
         >
           Copy for LinkedIn
+        </button>
+        <button
+          type="button"
+          onClick={async () => {
+            const data = await ensureShareData();
+            if (data) {
+              window.open(`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(data.url)}`, '_blank', 'noopener,noreferrer');
+            }
+          }}
+          disabled={isGenerating}
+          className="inline-flex items-center justify-center rounded-full border border-slate-200 px-5 py-3 text-sm font-semibold text-slate-700 transition hover:border-primary hover:text-primary disabled:cursor-not-allowed disabled:border-slate-200 disabled:text-slate-400"
+        >
+          Share on LinkedIn
         </button>
         <button
           type="button"

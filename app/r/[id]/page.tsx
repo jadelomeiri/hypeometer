@@ -8,17 +8,22 @@ import { SiteFooter } from '../../../components/SiteFooter';
 import { APP_CONFIG } from '../../../lib/config';
 import { buildPublicShareUrl } from '../../../lib/publicResult';
 import { getSharedResultStore, sanitizeShareId } from '../../../lib/share/store';
+import { SharedResultRecordV1 } from '../../../lib/types';
 
 interface PublicResultPageProps {
   params: Promise<{ id: string }>;
 }
 
-async function loadShareRecord(id: string) {
+async function loadShareRecord(id: string): Promise<SharedResultRecordV1 | null> {
   const sanitized = sanitizeShareId(id);
   if (!sanitized) return null;
 
-  const store = getSharedResultStore();
-  return store.getById(sanitized);
+  try {
+    const store = getSharedResultStore();
+    return await store.getById(sanitized);
+  } catch {
+    return null;
+  }
 }
 
 export async function generateMetadata({ params }: PublicResultPageProps): Promise<Metadata> {
@@ -28,6 +33,7 @@ export async function generateMetadata({ params }: PublicResultPageProps): Promi
   if (!record) {
     return {
       title: `Result not found | ${APP_CONFIG.name}`,
+      description: 'This shared result is missing, expired, or unavailable.',
     };
   }
 
@@ -61,7 +67,9 @@ export default async function PublicResultPage({ params }: PublicResultPageProps
   }
 
   const store = getSharedResultStore();
-  await store.incrementViews(record.id);
+  void store.incrementViews(record.id).catch((error) => {
+    console.error('Failed to increment shared result views', error);
+  });
 
   return (
     <main className="min-h-screen px-4 py-10 sm:px-6 lg:px-8">
