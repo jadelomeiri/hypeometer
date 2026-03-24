@@ -42,8 +42,7 @@ export function ResultSummaryCard({ result, compact = false, explanationLimit = 
 
       <div className="mt-6 rounded-2xl border border-slate-100 bg-slate-50 p-5">
         <div className="flex items-center justify-between gap-3">
-          <h3 className="text-lg font-semibold text-slate-900">Why it scored this way</h3>
-          <p className="text-xs font-medium uppercase tracking-[0.2em] text-slate-500">Built by {APP_CONFIG.founder.name}</p>
+          <h3 className="text-lg font-semibold text-slate-900">Why it scored this way</h3>        
         </div>
         <ul className="mt-4 space-y-3 text-sm leading-6 text-slate-700">
           {bullets.map((item) => (

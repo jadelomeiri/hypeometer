@@ -15,11 +15,6 @@ export function ShareActions({ result, originalText }: ShareActionsProps) {
   const [isGenerating, setIsGenerating] = useState(false);
   const [feedback, setFeedback] = useState<{ tone: 'success' | 'error'; message: string } | null>(null);
 
-  const xIntent = useMemo(() => {
-    if (!shareData) return '#';
-    return `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareData.shareText)}`;
-  }, [shareData]);
-
   useEffect(() => {
     setShareData(null);
     setFeedback(null);
@@ -150,7 +145,6 @@ export function ShareActions({ result, originalText }: ShareActionsProps) {
       ) : null}
 
       {feedback ? <div className="mt-4"><Toast message={feedback.message} tone={feedback.tone} /></div> : null}
-      {shareData ? <p className="mt-4 text-xs text-slate-500">X intent preview: {xIntent}</p> : null}
     </section>
   );
 }
