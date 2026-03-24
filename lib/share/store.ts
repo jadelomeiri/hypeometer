@@ -4,8 +4,7 @@ import { APP_CONFIG } from '../config';
 import { CreateShareResultRequest, PublicShareResultV1, SharedResultRecordV1 } from '../types';
 import { isSharedResultRecordV1, isValidShareId } from './validation';
 
-const SHARE_KEY_PREFIX = 'share:result:';
-const SHARE_VIEWS_KEY_PREFIX = 'share:views:';
+const SHARE_KEY_PREFIX = 'hypeometer:share:';
 const ID_ALPHABET = 'abcdefghijkmnpqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789';
 
 export interface SharedResultStore {
@@ -16,10 +15,6 @@ export interface SharedResultStore {
 
 function buildRecordKey(id: string) {
   return `${SHARE_KEY_PREFIX}${id}`;
-}
-
-function buildViewsKey(id: string) {
-  return `${SHARE_VIEWS_KEY_PREFIX}${id}`;
 }
 
 function createShareId(length = 11) {
@@ -101,7 +96,7 @@ class InMemorySharedResultStore implements SharedResultStore {
   }
 }
 
-class VercelKvRestClient {
+class UpstashRedisRestClient {
   constructor(private readonly url: string, private readonly token: string) {}
 
   private async request<T>(path: string, init?: RequestInit): Promise<T | null> {
@@ -115,7 +110,7 @@ class VercelKvRestClient {
     });
 
     if (!response.ok) {
-      throw new Error(`KV request failed with status ${response.status}.`);
+      throw new Error(`Upstash Redis request failed with status ${response.status}.`);
     }
 
     const payload = await response.json() as { result?: T | string | null };
@@ -134,18 +129,19 @@ class VercelKvRestClient {
     return this.request<T>(`/get/${encodeURIComponent(key)}`);
   }
 
-  async set(key: string, value: unknown, ex: number) {
+  async setWithTtl(key: string, value: unknown, ttlSeconds: number) {
     const encodedValue = encodeURIComponent(JSON.stringify(value));
-    await this.request(`/set/${encodeURIComponent(key)}/${encodedValue}?EX=${ex}`);
+    await this.request(`/set/${encodeURIComponent(key)}/${encodedValue}?EX=${ttlSeconds}`);
   }
 
-  async incr(key: string): Promise<number | null> {
-    return this.request<number>(`/incr/${encodeURIComponent(key)}`);
+  async setKeepTtl(key: string, value: unknown) {
+    const encodedValue = encodeURIComponent(JSON.stringify(value));
+    await this.request(`/set/${encodeURIComponent(key)}/${encodedValue}?KEEPTTL=true`);
   }
 }
 
-class VercelKVSharedResultStore implements SharedResultStore {
-  constructor(private readonly client: VercelKvRestClient) {}
+class UpstashRedisSharedResultStore implements SharedResultStore {
+  constructor(private readonly client: UpstashRedisRestClient) {}
 
   async create(input: CreateShareResultRequest): Promise<SharedResultRecordV1> {
     const createdAt = nowIso();
@@ -171,8 +167,7 @@ class VercelKVSharedResultStore implements SharedResultStore {
         },
       };
 
-      await this.client.set(key, record, ttlSeconds);
-      await this.client.set(buildViewsKey(id), 0, ttlSeconds);
+      await this.client.setWithTtl(key, record, ttlSeconds);
       return record;
     }
 
@@ -185,24 +180,13 @@ class VercelKVSharedResultStore implements SharedResultStore {
       return null;
     }
 
-    const views = await this.client.get<number>(buildViewsKey(id));
-
-    return {
-      ...raw,
-      metadata: {
-        ...raw.metadata,
-        views: typeof views === 'number' ? views : raw.metadata.views,
-      },
-    };
+    return raw;
   }
 
   async incrementViews(id: string): Promise<void> {
     const record = await this.client.get<unknown>(buildRecordKey(id));
     if (!isSharedResultRecordV1(record)) return;
 
-    await this.client.incr(buildViewsKey(id));
-
-    const ttlSeconds = APP_CONFIG.share.ttlSeconds;
     const nextRecord: SharedResultRecordV1 = {
       ...record,
       metadata: {
@@ -212,29 +196,29 @@ class VercelKVSharedResultStore implements SharedResultStore {
       },
     };
 
-    await this.client.set(buildRecordKey(id), nextRecord, ttlSeconds);
+    await this.client.setKeepTtl(buildRecordKey(id), nextRecord);
   }
 }
 
 let sharedStore: SharedResultStore | null = null;
 
-function createVercelClient() {
-  const url = process.env.KV_REST_API_URL;
-  const token = process.env.KV_REST_API_TOKEN;
+function createUpstashClient() {
+  const url = process.env.UPSTASH_REDIS_REST_URL;
+  const token = process.env.UPSTASH_REDIS_REST_TOKEN;
 
   if (!url || !token) {
     return null;
   }
 
-  return new VercelKvRestClient(url, token);
+  return new UpstashRedisRestClient(url, token);
 }
 
 export function getSharedResultStore() {
   if (sharedStore) return sharedStore;
 
-  const client = createVercelClient();
+  const client = createUpstashClient();
   if (client) {
-    sharedStore = new VercelKVSharedResultStore(client);
+    sharedStore = new UpstashRedisSharedResultStore(client);
     return sharedStore;
   }
 

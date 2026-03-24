@@ -42,11 +42,11 @@ In Vercel project settings, make sure the production branch is set to `main`.
 Set these variables in Vercel (or your local `.env.local`) for persistent share links:
 
 - `NEXT_PUBLIC_APP_URL` (example: `https://hypometer.app`)
-- `KV_REST_API_URL` (from Vercel KV)
-- `KV_REST_API_TOKEN` (from Vercel KV)
+- `UPSTASH_REDIS_REST_URL` (from Upstash Redis)
+- `UPSTASH_REDIS_REST_TOKEN` (from Upstash Redis)
 - `SHARE_RESULT_TTL_SECONDS` (optional, defaults to 30 days)
 
-If KV vars are not configured, share links use an in-memory fallback store (good for local development only).
+If Upstash vars are not configured, share links use an in-memory fallback store (good for local development only).
 
 ### 4. Optional: protect `main` with CI checks
 
