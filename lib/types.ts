@@ -28,14 +28,31 @@ export interface SignalMatch {
 export interface PublicShareResultV1 {
   version: 1;
   createdAt: string;
+  expiresAt?: string;
   originalText: string;
-  originalTextWasTrimmed: boolean;
   result: AnalyzePostResult;
+}
+
+export interface SharedResultMetadata {
+  views: number;
+  lastViewedAt?: string;
+}
+
+export interface SharedResultRecordV1 {
+  id: string;
+  version: 1;
+  createdAt: string;
+  expiresAt?: string;
+  originalText: string;
+  result: AnalyzePostResult;
+  mode?: string;
+  metadata: SharedResultMetadata;
 }
 
 export interface CreateShareResultRequest {
   originalText: string;
   result: AnalyzePostResult;
+  mode?: string;
 }
 
 export interface CreateShareResultResponse {

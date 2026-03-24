@@ -1,3 +1,12 @@
+const DEFAULT_SHARE_TTL_SECONDS = 60 * 60 * 24 * 30;
+
+function parsePositiveInt(value: string | undefined, fallback: number) {
+  if (!value) return fallback;
+  const parsed = Number.parseInt(value, 10);
+  if (!Number.isFinite(parsed) || parsed <= 0) return fallback;
+  return parsed;
+}
+
 export const APP_CONFIG = {
   name: 'HypeOmeter',
   description: 'Separate AI substance from AI vibes.',
@@ -12,7 +21,7 @@ export const APP_CONFIG = {
   },
   repoUrl: 'https://github.com/jadelomeiri/hypometer',
   share: {
-    maxOriginalTextLength: 900,
+    ttlSeconds: parsePositiveInt(process.env.SHARE_RESULT_TTL_SECONDS, DEFAULT_SHARE_TTL_SECONDS),
     defaultCopy: 'Ran an AI post through {appName}. Hype: {hype}, Substance: {substance}. Verdict: {verdict}. {url} via {appName} by {founderName}',
   },
 } as const;
